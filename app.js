@@ -231,7 +231,7 @@ app.set('port', process.env.PORT);
 app.set('ip', process.env.IP);
 
 app.use(function(req, res, next) {
-	res.status(404).redirect('/account');
+	res.status(404).redirect('/account/index');
 });
 
 if(process.env.APP_ENV == 'dev') {
