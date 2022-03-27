@@ -10,7 +10,7 @@ module.exports.isLoggedIn = function(req, res, next) {
 module.exports.isNotLoggedIn = function(req, res, next) {
 	if(req.session) {
 		if(req.session.user) {
-			return res.redirect('/account/');
+			return res.redirect('/account/index');
 		}
 	}
 	return next();

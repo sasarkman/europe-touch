@@ -9,7 +9,7 @@ var mongoose = require('mongoose');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 // Load user input validator
-const { check, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 
 // Load authentication middleware
 const auth = require('../auth');
@@ -46,8 +46,8 @@ router.route('/').
 	post(
 		[
 			auth.isAdmin,
-			check(['name', 'duration', 'price']).notEmpty().isString(),
-			check('description').optional().isString()
+			body(['name', 'duration', 'price']).notEmpty().isString(),
+			body('description').optional().isString()
 		], function(req, res) {
 			const errors = validationResult(req);
 			if(!errors.isEmpty()) {
@@ -78,10 +78,10 @@ router.route('/').
 	put(
 		[
 			auth.isAdmin,
-			check('id').custom(value => {
+			body('id').custom(value => {
 				return ObjectId.isValid(value);
 			}),
-			check(['name', 'duration', 'price', 'description']).notEmpty(),
+			body(['name', 'duration', 'price', 'description']).notEmpty(),
 		],
 		function(req, res) {
 			const errors = validationResult(req);
@@ -111,7 +111,7 @@ router.route('/').
 	delete(
 		[
 			auth.isAdmin,
-			check('id').custom(value => {
+			body('id').custom(value => {
 				return ObjectId.isValid(value);
 			}),
 		],

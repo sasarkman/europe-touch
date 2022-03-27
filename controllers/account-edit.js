@@ -1,11 +1,16 @@
 $(function () {
+	const emailField = $('#email');
+	const nameField = $('#name');
+	const ageField = $('#age');
+	const notificationsSelector = $('#notifications');
+
 	// Initialize popover
 	$('[data-bs-toggle="popover"]').popover();
 
 	// Can't use jQuery here
-	const phoneInputField = document.querySelector("#phone");
+	const phoneInputField = document.querySelector('#phone');
 	const iti = window.intlTelInput(phoneInputField, {
-		utilsScript: '/intl-tel-utils.js'
+		utilsScript: '/intl-tel-utils.js',
 	});
 
 	// Add phone validator
@@ -15,13 +20,6 @@ $(function () {
 
 	var validator = $('#main-form').validate({
 		rules: {
-			email: {
-				email: true,
-				required: true
-			},
-			password: {
-				required: true
-			},
 			name: {
 				required: true
 			},
@@ -32,14 +30,10 @@ $(function () {
 			age: {
 				number: true,
 				required: true
+			},
+			notifications: {
+				required: true
 			}
-		},
-		messages: {
-			email: 'Please enter an e-mail address',
-			password: 'Please enter a password',
-			name: 'Please enter your full name',
-			phone: 'Please enter a phone number',
-			age: 'Please enter your age'
 		},
 		errorElement: 'div',
 		errorPlacement: function ( error, element ) {
@@ -57,7 +51,7 @@ $(function () {
 		}
 	});
 
-	$('#create_button').on('click', function() {
+	$('#save_button').on('click', function() {
 		// reset alert if need be
 		alertReset();
 
@@ -65,27 +59,26 @@ $(function () {
 		if(!validator.form()) return;
 
 		// show spinner
-		showSpinner('#create_button', 'Creating...');
+		showSpinner('#save_button', 'Saving changes...');
 
-		var email = $('#email').val();
 		var password = $('#password').val();
 		var name = $('#name').val();
-		// var phone = $('#phone').val();
 		var phone = iti.getNumber();
 		var age = $('#age').val();
+		var notifications = $('#notifications').prop('checked');
 
 		const settings = {
-			method: 'POST',
+			method: 'PUT',
 			headers: {
 				'Accept': 'application/json',
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				'email': email,
 				'password': password,
 				'name': name,
 				'phone': phone,
-				'age': age
+				'age': age,
+				'notifications': notifications
 			})
 		}
 
@@ -98,14 +91,40 @@ $(function () {
 
 				switch(statusCode) {
 					case 200:
-						$('#main-form').hide();
 						alertShow(statusText, 'alert-success');
 						break;
 					default:
 						alertShow(statusText, 'alert-danger');
-						hideSpinner('#create_button', 'Create account');
 						break
 				}
-			});
+				hideSpinner('#save_button', 'Save changes');
+			})
 	});
+
+	var statusCode = '';
+	var statusText = '';
+	var data = {};
+	new API().request('/account/', { method: 'GET' })
+		.then(response => {
+			statusCode = response.status;
+			statusText = response.msg;
+			data = response.data;
+
+			console.log(data);
+
+			switch(statusCode) {
+				case 200:
+					emailField.val(data.email);
+					nameField.val(data.name);
+					iti.setNumber(data.phone || '');
+					ageField.val(data.age);
+					notificationsSelector.prop('checked', data.notifications);
+
+					break;
+				default:
+					alertShow(statusText, 'alert-danger');
+					hideSpinner('#save_button', 'Save changes');
+					break
+			}
+	})
 });

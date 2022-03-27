@@ -120,7 +120,7 @@ $(function() {
 
 				switch(statusCode) {
 					case 200:
-						statusText = `${statusText} View <a href="/appointment/viewall">appointments</a>.`;
+						statusText = `${statusText} Please wait for Edina to confirm it. View <a href="/appointment/viewall">appointments</a>.`;
 						$('#main-form').hide();
 						alertShow(statusText, 'alert-success');
 						break;

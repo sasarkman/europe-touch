@@ -49,6 +49,10 @@ var AccountSchema = new mongoose.Schema({
 	},
 	availableDates: {
 		type: [String],
+	},
+	notifications: {
+		type: Boolean,
+		default: false
 	}
 });
 
@@ -68,8 +72,6 @@ AccountSchema.pre('save', function(next) {
 		})
 	})
 });
-
-
 
 AccountSchema.methods.comparePassword = function(candidatePassword, callback) {
 	bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {

@@ -64,7 +64,7 @@ $(function () {
 
 			switch(statusCode) {
 				case 200:
-					window.location.replace('/account');
+					window.location.replace('/account/index');
 					break;
 				default:
 					alertShow(statusText, 'alert-danger');

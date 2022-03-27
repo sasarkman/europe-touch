@@ -10,7 +10,7 @@ var mongoose = require('mongoose');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 // Load user input validator
-const { check, validationResult } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 
 // Load authentication middleware
 const auth = require('../auth');
@@ -62,7 +62,7 @@ router.route('/').
 			auth.isLoggedIn,
 		],
 		function(req, res) {
-			const id = new mongoose.Types.ObjectId(req.session.user._id);
+			const id = new mongoose.Types.ObjectId(req.session.user.id);
 
 			// Final query output structure
 			var project = {
@@ -171,8 +171,8 @@ router.route('/').
 	post(
 		[
 			auth.isLoggedIn,
-			check('datetime').notEmpty().isISO8601(),
-			check('service').notEmpty()
+			body('datetime').notEmpty().isISO8601(),
+			body('service').notEmpty()
 		],
 		function(req, res) {
 			const errors = validationResult(req);
@@ -181,7 +181,7 @@ router.route('/').
 			}
 
 			// Get session info
-			var id = new mongoose.Types.ObjectId(req.session.user._id);
+			var id = new mongoose.Types.ObjectId(req.session.user.id);
 			var email = req.session.user.email;
 
 			// Get body info
@@ -190,24 +190,17 @@ router.route('/').
 
 			var newAppointment = new AppointmentModel({account:id, service, datetime});
 			newAppointment.save(function(err, result) {
-				if(err) {
-					console.log(err);
-					// return res.send("ERROR");
-					return res.status(400).json({ msg: 'Failed to schedule appointment' })
-				} else {
-					console.log(`appointment made for email ${email}, id: ${id}`);
-					// return res.redirect('/account');
-					return res.status(200).json({ msg: 'Appointment scheduled!' })
-				}
+				if(err) return res.status(400).json({ msg: 'Failed to schedule appointment' })
+				else return res.status(200).json({ msg: 'Appointment scheduled!' })
 			});
 		}
 	)
 	.delete(
 		[
-		auth.isLoggedIn,
-		check('id').custom(value => {
-			return ObjectId.isValid(value);
-		}),
+			auth.isLoggedIn,
+			body('id').custom(value => {
+				return ObjectId.isValid(value);
+			}),
 		], 
 		function(req, res) {
 			const errors = validationResult(req);
@@ -228,7 +221,7 @@ router.route('/').
 				console.log(`Admin is deleting appointment ${appointmentID}`);
 			} else {
 				console.log(`User is deleting appointment ${appointmentID}`);
-				var userID = new mongoose.Types.ObjectId(req.session.user._id);
+				var userID = new mongoose.Types.ObjectId(req.session.user.id);
 				query.account = userID;
 			}
 
@@ -262,13 +255,12 @@ router.route('/').
 								});
 
 								// Send SMS text
-								texter.messages
-									.create({
-										to: process.env.TEMPNUM,
-										from: process.env.TWILIO_NUMBER,
-										body: `${account.name} has cancelled their appointment at ${result.datetime}. Their phone number is ${account.phone}. - Europe Touch Massage`
-									})
-									.then(message => console.log(message.sid));
+								texter.messages.create({
+									to: process.env.TEMPNUM,
+									from: process.env.TWILIO_NUMBER,
+									body: `${account.name} has cancelled their appointment at ${result.datetime}. Their phone number is ${account.phone}. - Europe Touch Massage`
+								})
+								.then(message => console.log(message.sid));
 							}
 						});
 					}
@@ -283,7 +275,7 @@ router.route('/confirm')
 	.post(
 		[
 			auth.isAdmin,
-			check('id').custom(value => {
+			body('id').custom(value => {
 				return ObjectId.isValid(value);
 			}),
 		],
@@ -360,7 +352,7 @@ router.route('/unconfirm')
 	.post(
 		[
 			auth.isAdmin,
-			check('id').custom(value => {
+			body('id').custom(value => {
 				return ObjectId.isValid(value);
 			}),
 		],

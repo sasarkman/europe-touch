@@ -4,7 +4,7 @@
 	<script type="text/javascript" src="/jquery-validation.js"></script>
 	<script type="text/javascript" src="/bootstrap.js"></script>
 	<script type="text/javascript" src="/intl-tel-input.js"></script>
-	<script type="text/javascript" src="/controllers/account-create.js"></script>
+	<script type="text/javascript" src="/controllers/account-edit.js"></script>
 
 	<script type="text/javascript" src="/scripts/api.js"></script>
 	<script type="text/javascript" src="/scripts/utilities.js"></script>
@@ -20,33 +20,29 @@
 	</style>
 
 	<head>
-		<title>Create Account</title>
+		<title>Account Settings</title>
 	</head>
 	<body class='d-flex flex-column min-vh-100'>
+		<< partials/header >>
+
 		<div class='mt-auto d-flex flex-column justify-content-center align-items-center'>
-			<h1>Create Account</h1>
 			<div class="alert d-none" role="alert" id="alert"></div>
-			<form method="post" id='main-form'>
+			<form id='main-form'>
 				<div class='form-group mb-1'>
-					<label for="email">E-mail address:</label>
-					<input type="email" class='form-control' id="email" name="email">
-				</div>
-	
-				<div class='form-group mb-1'>
-					<label for="password">Password:</label>
-					<input type="password" class='form-control' id="password" name="password">
+					<label for="email">E-mail:</label>
+					<input class='form-control' id="email" name="email" readonly>
 				</div>
 
 				<div class='form-group mb-1'>
-					<label for="name">Full name:</label>
-					<input type="name" class='form-control' id="name" name="name">
+					<label for="name">Name:</label>
+					<input class='form-control' id="name" name="name">
 				</div>
-	
+
 				<div class='form-group mb-1'>
 					<label for="phone">Phone number:</label><br>
-					<input type="tel" class='form-control' aria-describedby="phone_help" id="phone" name="phone">
+					<input type="tel" class='form-control' id="phone" name="phone">
 				</div>
-	
+
 				<div class='form-group mb-1'>
 					<label for="age">Age:</label>
 					<div class="input-group">
@@ -57,11 +53,17 @@
 					</div>
 				</div>
 
-				<button type="button" class="btn btn-primary" id="create_button">Create account</button>
+				<div class='form-group form-switch mb-1'>
+					<input class="form-check-input" type="checkbox" role="switch" id="notifications">
+					<label for="notifications">E-mail/text notifications</label><br>
+				</div>
+
+				<button type="button" class="btn btn-primary" id="save_button">
+					Save changes
+				</button>
 			</form>
 		</div>
 
 		<< partials/footer >>
-
 	</body>
 </html>

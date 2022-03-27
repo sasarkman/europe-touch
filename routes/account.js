@@ -14,7 +14,7 @@ var mongoose = require('mongoose');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 // Load user input validator
-const { check, param, validationResult } = require('express-validator');
+const { param, body, validationResult } = require('express-validator');
 
 // Load authentication middleware
 const auth = require('../auth');
@@ -46,7 +46,18 @@ router.route('/create').
 	)
 ;
 
-router.route('/').
+router.route('/edit').
+	get(
+		[
+			auth.isLoggedIn
+		],
+		function(req, res) {
+			return res.render('account-edit', {});
+		}
+	)
+;
+
+router.route('/index').
 	get(
 		[
 			auth.isLoggedIn
@@ -61,21 +72,74 @@ router.route('/').
 					<a href="/appointment/viewAll">View appointments</a>
 					<a href="/service/manage">Manage services</a>
 					<a href="/service/create">Create service</a>
+					<a href="/account/edit">Account settings</a>
 				`;
 			} else {
 				HTML = `
 					<a href="/appointment/viewAll">My appointments</a>
 					<a href="/appointment/schedule">Schedule appointment</a>
+					<a href="/account/edit">Account settings</a>
 				`;
 			}
 			res.render('account-index', { username: user, temp: HTML });
+		}
+	)
+;
+
+router.route('/').
+	get(
+		[
+			auth.isLoggedIn,
+			body('id').optional().custom(value => {
+				return ObjectId.isValid(value);
+			})
+		],
+		function(req, res) {
+			const errors = validationResult(req);
+			if(!errors.isEmpty()) {
+				return res.status(422).json({ msg: 'Invalid input' });
+			}
+
+			const sess_id = req.session.user.id;
+			const id = req.body.id || sess_id;
+			const isAdmin = req.session.user.admin;
+
+			// A user can only request their own account, unless they're an admin
+			if(id == sess_id || isAdmin) {
+				AccountModel.findById(id, function(err, doc) {
+					if(err || !doc) res.status(400).json({ msg: 'Failed to get account' });
+					else {
+						// List of fields we're willing to expose
+						const exposedFields = [
+							'email',
+							'phone',
+							'name',
+							'age',
+							'availableDates',
+							'notifications'
+						];
+
+						var output = {};
+
+						exposedFields.forEach(e => {
+							if (typeof doc[e] !== 'undefined') {
+								output[e] = doc[e];
+							}
+						})
+
+						res.status(200).json({ msg: 'Retrieved account', data: output });
+					}
+				})
+			} else {
+				res.status(400).json({ msg: 'Invalid input' });
+			}
 		}
 	).
 	post(
 		[
 			auth.isNotLoggedIn,
-			check('email').isEmail(),
-			check(['password', 'name', 'phone', 'age']).notEmpty(),
+			body('email').isEmail(),
+			body(['password', 'name', 'phone', 'age']).notEmpty(),
 		], function(req, res) {
 			const errors = validationResult(req);
 			if(!errors.isEmpty()) {
@@ -121,6 +185,48 @@ router.route('/').
 				}
 			});
 		}
+	).
+	put(
+		[
+			auth.isLoggedIn,
+		], function(req, res) {
+			const errors = validationResult(req);
+			if(!errors.isEmpty()) {
+				return res.status(422).json({ msg: 'Invalid input' });
+			}
+
+			// User ID
+			const id = req.session.user.id;
+
+			// List of fields we allow updates to
+			const updateableFields = [
+				'phone',
+				'name',
+				'age',
+				'availableDates',
+				'notifications'
+			];
+
+			// Update query
+			var update = {};
+
+			// Determine our update query
+			updateableFields.forEach(function(key) {
+				if (req.body.hasOwnProperty(key)) {
+					update[key] = req.body[key];
+				
+					console.log(`${key}: ${req.body[key]}`);
+				}
+			})				
+
+			// Perform update
+			AccountModel.findByIdAndUpdate(id, update, function(err, doc) {
+				if(err || !doc) return res.status(400).json({ msg: 'Error updating account' });
+				else {
+					return res.status(200).json({ msg: 'Account updated!' });
+				}
+			})
+		}
 	)
 ;
 
@@ -136,8 +242,8 @@ router.route('/login').
 	post(
 		[
 			auth.isNotLoggedIn,
-			check('email', 'Invalid e-mail address').isEmail(),
-			check('password', 'Password was empty').notEmpty(),
+			body('email', 'Invalid e-mail address').isEmail(),
+			body('password', 'Password was empty').notEmpty(),
 		],
 		function(req, res) {
 			const errors = validationResult(req);
@@ -160,9 +266,9 @@ router.route('/login').
 								return res.status(400).json({ msg: 'Please confirm your account by following the e-mail sent to your inbox. <b>You may need to check your spam folder.<b>'});
 							}
 
-							// todo: trim down to just storing _id
+							// todo: trim down to just storing id
 							req.session.user = {};
-							req.session.user['_id'] = record._id;
+							req.session.user['id'] = record._id;
 							req.session.user['email'] = record.email;
 							req.session.user['name'] = record.name;
 							req.session.user['admin'] = record.admin;
@@ -284,7 +390,7 @@ router.route('/forgotPassword').
 	post(
 		[
 			auth.isNotLoggedIn,
-			check('email').isEmail()
+			body('email').isEmail()
 		],
 		function(req, res) {
 			const errors = validationResult(req);
@@ -409,7 +515,7 @@ router.route('/resetPassword/:token').
 		[
 			auth.isNotLoggedIn,
 			param('token').notEmpty().isHexadecimal(),
-			check('password').notEmpty()
+			body('password').notEmpty()
 		],
 		function(req, res) {
 			const errors = validationResult(req);
@@ -458,13 +564,14 @@ router.route('/resetPassword/:token').
 	)
 ;
 
+// TODO
 router.route('/availability').
 	get(
 		[
 			auth.isLoggedIn
 		],
 		function(req, res) {
-			const id = req.session.user._id;
+			const id = req.session.user.id;
 			
 			AccountModel.findById(id, {_id:false, availableDates: true}).exec(function(err, result) {
 				if(err || !result) return res.status(400).json({ msg: `Failed to retrieve availability.`});
@@ -475,14 +582,14 @@ router.route('/availability').
 	post(
 		[
 			auth.isAdmin,
-			check('dates').exists(),
+			body('dates').exists(),
 		], function(req, res) {
 			const errors = validationResult(req);
 			if(!errors.isEmpty()) {
 				return res.status(422).json({ msg: 'Invalid input' });
 			}
 
-			const id = req.session.user._id;
+			const id = req.session.user.id;
 
 			AccountModel.findById(id, 'availableDates').exec(function(err, result) {
 				if(err || !result) return res.status(400).json({ msg: `Failed to retrieve availability for this account.`});

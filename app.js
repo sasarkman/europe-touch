@@ -98,7 +98,7 @@ app.use(session({
 	cookie: {
 		maxAge: 1000 * 60 * 60 * 5,
 		httpOnly: true,
-		secure: true // https only
+		secure: (process.env.APP_ENV == 'dev') ? false: true // https only
 	},
 	store: store
 }));
@@ -167,9 +167,9 @@ const errorLogStream = rfs.createStream(`${logTimestamp}-error.log`, {
 })
 
 // Console logging
-// app.use(logger(loggingSettings, { 
-// 	stream: process.stdout,
-// }));
+if(process.env.APP_ENV == 'dev') app.use(logger(loggingSettings, { 
+	stream: process.stdout,
+}));
 
 // Log dump
 app.use(logger(loggingSettings, { 
@@ -219,6 +219,7 @@ app.use('/fullcalendar.js', express.static(path.join(__dirname, 'node_modules/fu
 app.use('/fullcalendar.css', express.static(path.join(__dirname, 'node_modules/fullcalendar/main.css')));
 
 app.use('/intl-tel-input.js', express.static(path.join(__dirname, 'node_modules/intl-tel-input/build/js/intlTelInput.min.js')));
+app.use('/intl-tel-utils.js', express.static(path.join(__dirname, 'node_modules/intl-tel-input/build/js/utils.js')));
 app.use('/img/flags.png', express.static(path.join(__dirname, 'node_modules/intl-tel-input/build/img/flags.png')));
 app.use('/intl-tel-input.css', express.static(path.join(__dirname, 'node_modules/intl-tel-input/build/css/intlTelInput.min.css')));
 
@@ -233,19 +234,24 @@ app.use(function(req, res, next) {
 	res.status(404).redirect('/account');
 });
 
-// HTTP
-// app.listen(app.get('port'), app.get('ip'), function() {
-// 	console.log(`Example app listening on port ${app.get('ip')}:${app.get('port')}`);
-// });
-
-https
-	.createServer(
+if(process.env.APP_ENV == 'dev') {
+	// HTTP
+	app.listen(app.get('port'), app.get('ip'), function() {
+		console.log(`Listening on port ${app.get('ip')}:${app.get('port')}`);
+	});
+} else {
+	// HTTPS
+	https.createServer(
 		{
-		key: fs.readFileSync(process.env.KEY),
-		cert: fs.readFileSync(process.env.CERT),
+			key: fs.readFileSync(process.env.KEY),
+			cert: fs.readFileSync(process.env.CERT),
 		},
 		app
-	).
-	listen(app.get('port'), app.get('ip'), function () {
-		console.log(`Example app listening on port ${app.get('ip')}:${app.get('port')}`);
-	});
+	).listen(
+		app.get('port'),
+		app.get('ip'),
+		function () {
+			console.log(`Listening on port ${app.get('ip')}:${app.get('port')}`);
+		}
+	);
+}

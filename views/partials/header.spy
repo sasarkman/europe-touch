@@ -3,21 +3,7 @@
 	<div class="sticky-top d-flex align-items-center justify-content-center bg-black">
 		<ul class="nav justify-content-lg-start  col-lg-auto me-lg-auto">
 			<li><a href="#" class="nav-link px-2 text-gray">Europe Touch</a></li>
-			<li><a href="/account" class="nav-link px-2 text-white">Home</a></li>
-		</ul>
-
-		<div class="justify-content-lg-end m-1">
-			<a href="/account/logout" type="button" class="btn btn-dark">Logout</a>
-		</div>
-	</div>
-</div>
-
-<!-- Desktop -->
-<div class="d-lg-none d-md-block">
-	<div class="sticky-top align-items-center justify-content-center bg-black">
-		<ul class="nav justify-content-lg-start  col-lg-auto me-lg-auto">
-			<li><a href="#" class="nav-link px-2 text-gray">Europe Touch Small</a></li>
-			<li><a href="/account" class="nav-link px-2 text-white">Home</a></li>
+			<li><a href="/account/index" class="nav-link px-2 text-white">Home</a></li>
 		</ul>
 
 		<div class="justify-content-lg-end m-1">
