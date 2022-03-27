@@ -303,6 +303,8 @@ router.route('/confirm')
 							if(err) {
 								return res.status(400).json({ msg: 'Failed to confirm appointment' })
 							} else {
+								const datetime = new Date(appointment.datetime).toLocaleString('en-US');
+
 								// Perform notification operations asynchronously
 								AccountModel.findOne({ _id: account }, function(err, account) {
 									if(err || !account) console.log(err);
@@ -313,7 +315,7 @@ router.route('/confirm')
 											subject: 'Appointment confirmation',
 											text: `
 												Hello ${account.name},
-												Your appointment for ${appointment.datetime} has been confirmed!
+												Your appointment for ${datetime} has been confirmed!
 				
 												See you soon,
 												Edina

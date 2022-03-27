@@ -28,7 +28,12 @@ $(function() {
 			// Add the `help-block` class to the error element
 			error.addClass( "invalid-feedback" );
 
-			error.insertAfter( element );
+			// If element has popover, insert after its parent
+			if(element.parent('.form-check').length > 0 ) {
+				element.parent('.form-check').append(error);
+			} else {
+				error.insertAfter( element );
+			}
 		}
 	});
 

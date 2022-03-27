@@ -44,7 +44,7 @@ $(function () {
 			eventModal.find('#service').html(appointment.service.name);
 			eventModal.find('#service').attr('value', appointment._id);
 			eventModal.find('#duration').html(appointment.service.duration);
-			eventModal.find('#price').html(appointment.service.price);
+			eventModal.find('#price').html('$' + appointment.service.price);
 			eventModal.find('#description').html(appointment.service.description);
 
 			// Appointment fields
