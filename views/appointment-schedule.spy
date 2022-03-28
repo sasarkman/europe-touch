@@ -34,7 +34,7 @@
 	<body class='d-flex flex-column min-vh-100'>
 		<< partials/header >>
 		<div class='mt-auto d-flex flex-column justify-content-center align-items-center'>
-			<h1>Schedule appintment</h1>
+			<h1>Schedule appointment</h1>
 			<div class="alert d-none" role="alert" id="alert"></div>
 			<form method="post" id="main-form">
 				<div class='form-group mb-1'>

@@ -26,6 +26,7 @@
 		<< partials/header >>
 
 		<div class='mt-auto d-flex flex-column justify-content-center align-items-center'>
+			<h1>Edit account</h1>
 			<div class="alert d-none" role="alert" id="alert"></div>
 			<form id='main-form'>
 				<div class='form-group mb-1'>
