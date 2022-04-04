@@ -47,14 +47,14 @@ AppointmentSchema.post('save', function(next) {
 
 			// Send SMS notification to admins
 			AccountModel.find({ admin: true, notifications: true }, {'phone': 1}, function(err, docs) {
-				docs.forEach(function(doc) {
+				docs.forEach(async function(doc) {
 					// Send SMS text
-					texter.messages.create({
+					await texter.messages.create({
 						to: doc.phone,
 						from: process.env.TWILIO_NUMBER,
 						body: `${name} has created an appointment for ${datetime}. Their phone number is ${doc.phone}. - Europe Touch Massage`
 					})
-					.then(message => console.log(message.sid));
+					.then(message => console.log(`${message.sid}: ${message.status}`));
 				});
 			});
 		}
