@@ -35,6 +35,13 @@ $(function () {
 				required: true
 			}
 		},
+		messages: {
+			email: 'Please enter an e-mail address',
+			password: 'Please enter a password',
+			name: 'Please enter your full name',
+			phone: 'Please enter a valid phone number',
+			age: 'Please enter your age'
+		},
 		errorElement: 'div',
 		errorPlacement: function ( error, element ) {
 			// Add the `help-block` class to the error element
