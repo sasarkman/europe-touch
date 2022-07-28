@@ -69,7 +69,6 @@
 						<input type="text" class='form-control' name="datetime" id="datetime">
 					</div>
 
-
 					<div class="form-check">
 						<input class="form-check-input" type="checkbox" name="check1">
 						<label class="form-check-label" for="flexCheckDefault">
@@ -134,7 +133,7 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 				</div>
 			</div>
 			</div>

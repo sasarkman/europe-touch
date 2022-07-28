@@ -2,6 +2,7 @@ $(function () {
 	var eventModal = $('#eventModal');
 
 	var appointmentID = '';
+	var appointment = null;
 	var calendarEl = document.getElementById('calendar');
 	var calendar = new FullCalendar.Calendar(calendarEl, {
 		initialView: 'dayGridMonth',
@@ -25,20 +26,25 @@ $(function () {
 			meridiem: 'short'
 		},
 		eventClick: function(event) {
-			var appointment = event.event.extendedProps;
+			appointment = event.event.extendedProps;
 			appointmentID = appointment._id;
-			
+
 			var startTime = new Date(event.event.start).toLocaleTimeString('en-US');
 			var createdDate = new Date(appointment.created).toLocaleString('en-US');
-			var status = appointment.approved ? 'confirmed' : 'not confirmed';
-			var statusColor = appointment.approved ? 'text-success' : 'text-danger';
+			var status = appointment.confirmed ? 'confirmed' : 'not confirmed';
+			var statusColor = appointment.confirmed ? 'text-success' : 'text-danger';
 
-			eventModal.find('#title').html(`${appointment.account.name}'s appointment`);
+			const name = (appointment.guest) ? appointment.name : appointment.account.name;
+			const email = (appointment.guest) ? appointment.email : appointment.account.email;
+			const phone = (appointment.guest) ? appointment.phone : appointment.account.phone;
+			const age = (appointment.age) ? appointment.age : appointment.account.age;
+
+			eventModal.find('#title').html(`${name}'s appointment` + ((appointment.guest) ? ' (manual)' : ''));
 
 			// Customer fields
-			eventModal.find('#age').html(appointment.account.age);
-			eventModal.find('#phone').html(appointment.account.phone);
-			eventModal.find('#email').html(appointment.account.email);
+			eventModal.find('#age').html(age);
+			eventModal.find('#phone').html(phone);
+			eventModal.find('#email').html(email);
 
 			// Service fields
 			eventModal.find('#service').html(appointment.service.name);
@@ -56,13 +62,16 @@ $(function () {
 			eventModal.find('#status').attr('class', statusColor);
 			$('#status-info').popover({content: 'Appointments will be confirmed/unconfirmed by Edina and the customer will receive a notification.', html: true});
 
-			if(appointment.approved) {
-				showButton('#unconfirm-appointment')
-				hideButton('#confirm-appointment')
+			if(appointment.confirmed) {
+				showButton('#unconfirm_appointment')
+				hideButton('#confirm_appointment')
 			} else {
-				showButton('#confirm-appointment');
-				hideButton('#unconfirm-appointment')
+				showButton('#confirm_appointment');
+				hideButton('#unconfirm_appointment')
 			}
+
+			if(appointment.guest) hideButton('#reject_appointment');
+			else showButton('#reject_appointment');
 
 			// Display the modal
 			eventModal.modal('show');
@@ -73,25 +82,43 @@ $(function () {
 				extraParams: {
 					'type': 'confirmed'
 				},
-				color: 'green'
+				color: 'green',
 			},
 			{
 				url: '/appointment/',
 				extraParams: {
 					'type': 'unconfirmed'
 				},
-				color: 'red'
-			}
+				color: 'red',
+			},
+			{
+				url: '/guest-appointment/',
+				extraParams: {
+					'type': 'confirmed'
+				},
+				color: 'green',
+			},
+			{
+				url: '/guest-appointment/',
+				extraParams: {
+					'type': 'unconfirmed'
+				},
+				color: 'red',
+			},
 		],
 		eventsSet: function() {
 			// console.log(this.getEvents());
 		},
+		eventDidMount: function(info) {
+			// Differentiate appointments made by admin and those made by user accounts
+			var isGuest = (calendar.getEventById(info.event.id).extendedProps.account) ? false: true;
+			calendar.getEventById(info.event.id).setExtendedProp('guest', isGuest);
+		}
 	});
 
-	// TODO: define button click behavior HERE
-	$('#confirm-appointment').on('click', function() {
+	$('#confirm_appointment').on('click', function() {
 		alertReset();
-		showSpinner('#confirm-appointment', 'Confirming...');
+		showSpinner('#confirm_appointment', 'Confirming...');
 		const settings = { 
 			method: 'POST',
 			headers: {
@@ -103,34 +130,36 @@ $(function () {
 			})
 		}
 
-		new API().request('/appointment/confirm', settings).then(response => {
+		const url = (appointment.guest) ? '/guest-appointment/confirm' : '/appointment/confirm';
+
+		new API().request(url, settings).then(response => {
 			statusCode = response.status;
 			statusText = response.msg;
 
 			switch(statusCode) {
 				case 200:
 					calendar.getEventById(appointmentID).setProp('color', 'green');
-					calendar.getEventById(appointmentID).setExtendedProp('approved', true);
+					calendar.getEventById(appointmentID).setExtendedProp('confirmed', true);
 
 					eventModal.find('#status').html('confirmed');
 					eventModal.find('#status').attr('class', 'text-success');
 
 					alertShow(statusText, 'alert-success');
-					hideButton('#confirm-appointment');
-					showButton('#unconfirm-appointment');
+					hideButton('#confirm_appointment');
+					showButton('#unconfirm_appointment');
 					break;
 				default:
 					alertShow(statusText, 'alert-danger');
 					break
 			}
 
-			hideSpinner('#confirm-appointment', 'Confirm appointment');
+			hideSpinner('#confirm_appointment', 'Confirm');
 		})
 	});
 
-	$('#unconfirm-appointment').on('click', function() {
+	$('#unconfirm_appointment').on('click', function() {
 		alertReset();
-		showSpinner('#unconfirm-appointment', 'Unconfirming...');
+		showSpinner('#unconfirm_appointment', 'Unconfirming...');
 		const settings = {
 			method: 'POST',
 			headers: {
@@ -142,7 +171,9 @@ $(function () {
 			})
 		}
 
-		new API().request('/appointment/unconfirm', settings)
+		const url = (appointment.guest) ? '/guest-appointment/unconfirm' : '/appointment/unconfirm';
+
+		new API().request(url, settings)
 			.then(response => {
 				statusCode = response.status;
 				statusText = response.msg;
@@ -150,28 +181,130 @@ $(function () {
 				switch(statusCode) {
 					case 200:
 						calendar.getEventById(appointmentID).setProp('color', 'red');
-						calendar.getEventById(appointmentID).setExtendedProp('approved', false);
+						calendar.getEventById(appointmentID).setExtendedProp('confirmed', false);
 
 						eventModal.find('#status').html('not confirmed');
 						eventModal.find('#status').attr('class', 'text-danger');
 
 						alertShow(statusText, 'alert-success');
-						hideButton('#unconfirm-appointment');
-						showButton('#confirm-appointment');
+						hideButton('#unconfirm_appointment');
+						showButton('#confirm_appointment');
 						break;
 					default:
 						alertShow(statusText, 'alert-danger');
 						break
 				}
 
-				hideSpinner('#unconfirm-appointment', 'Unconfirm appointment');
+				hideSpinner('#unconfirm_appointment', 'Unconfirm');
 			})
+	});
+
+	// Delete appointment button
+	$('#delete_appointment').on('click', function() {
+		const modal = new Promise(function(resolve, reject){
+			$('#confirm_delete_modal').modal('show');
+			$('#confirm_delete_modal .btn-danger').on('click', function () {
+				resolve("user clicked yes");
+			});
+			$('#confirm_delete_modal .btn-secondary').on('click', function () {
+				reject("user clicked cancel");
+			});
+		}).then(function (val) {
+			showSpinner('#confirm_delete', 'Deleting...');
+			const settings = {
+				method: 'DELETE',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					id: appointmentID,
+				})
+			}
+
+			const url = (appointment.guest) ? '/guest-appointment/' : '/appointment/';
+
+			new API().request(url, settings).then(response => {
+				statusCode = response.status;
+				statusText = response.msg;
+
+				switch(statusCode) {
+					case 200:
+						// remove event from calendar
+						calendar.getEventById(appointmentID).remove();
+						$('#confirm_delete_modal').modal('toggle');
+						break;
+					default:
+						alertShow(statusText, 'alert-danger', '#delete_alert');
+						break
+				}
+
+				hideSpinner('#confirm_delete', 'Yes');
+			})
+		}).catch(function (err) {
+			$('#confirm_delete_modal').modal('toggle');
+			$("#eventModal").modal('toggle');
+			// console.log(err)
+		});
+	});
+
+	// Reject appointment button
+	$('#reject_appointment').on('click', function() {
+		const modal = new Promise(function(resolve, reject){
+			$('#confirm_reject_modal').modal('show');
+			$('#confirm_reject_modal .btn-danger').on('click', function () {
+				resolve("user clicked reject");
+			});
+			$('#confirm_reject_modal .btn-ok').on('click', function () {
+				reject("user clicked cancel");
+			});
+		}).then(function (val) {
+			showSpinner('#confirm_reject', 'Rejecting...');
+			const settings = {
+				method: 'POST',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					id: appointmentID,
+					reason: $('#reason').val() || undefined
+				})
+			}
+
+			const url = (appointment.guest) ? '/guest-appointment/reject' : '/appointment/reject';
+
+			new API().request(url, settings).then(response => {
+				statusCode = response.status;
+				statusText = response.msg;
+
+				switch(statusCode) {
+					case 200:
+						// remove event from calendar
+						calendar.getEventById(appointmentID).remove();
+						$('#confirm_reject_modal').modal('toggle');
+						break;
+					default:
+						alertShow(statusText, 'alert-danger', '#reject_alert');
+						break
+				}
+
+				hideSpinner('#confirm_reject', 'Yes');
+			})
+
+		}).catch(function (err) {
+			$('#confirm_reject_modal').modal('toggle');
+			$("#eventModal").modal('toggle');
+			// console.log(err)
+		});
 	});
 
 	// Reset button states when modal closes
 	eventModal.on('hide.bs.modal', function() {
-		enableButton('#confirm-appointment');
-		enableButton('#unconfirm-appointment');
+		enableButton('#confirm_appointment');
+		enableButton('#unconfirm_appointment');
+		alertReset('#delete_alert');
+		alertReset('#reject_alert');
 		alertReset();
 	})
 

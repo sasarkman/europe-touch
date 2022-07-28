@@ -33,12 +33,12 @@
 							<form method="post" id='main-form'>
 								<div class='form-group mb-1'>
 									<label for="email">E-mail address:</label>
-									<input type="email" class='form-control' placeholder='Enter e-mail address' id="email" name="email" aria-describedby="email-error">
+									<input type="email" class='form-control' placeholder='Enter e-mail address' id="email" name="email">
 								</div>
 
 								<div class='form-group mb-1'>
 									<label for="password">Password:</label>
-									<input type="password" class='form-control' placeholder='Enter password' id="password" name="password" aria-describedby="password-error">
+									<input type="password" class='form-control' placeholder='Enter password' id="password" name="password">
 								</div>
 							</form>
 							<button type="button" class="btn btn-primary" id="login_button">

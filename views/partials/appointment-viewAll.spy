@@ -49,19 +49,19 @@
 
 <!-- Delete confirm modal -->
 <div class="modal fade" id="confirm_cancel_modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
 				<h5 class="modal-title" id="title">Deleting appointment</h5>
 				<div class="alert d-none" role="alert" id="alert"></div>
 			</div>
-            <div class="modal-body">
-                Are you sure?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="confirm_cancel">Yes</button>
-                <button type="button" class="btn btn-ok" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#event_modal">Cancel</button>
-            </div>
-        </div>
-    </div>
+			<div class="modal-body">
+				Are you sure?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" id="confirm_cancel">Yes</button>
+				<button type="button" class="btn btn-ok" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#event_modal">Cancel</button>
+			</div>
+		</div>
+	</div>
 </div>

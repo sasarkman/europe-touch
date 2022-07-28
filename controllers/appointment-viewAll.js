@@ -35,8 +35,8 @@ $(function () {
 			const dateOptions = {year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit'};
 			var startTime = new Date(event.event.start).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
 			var createdDate = new Date(appointment.created).toLocaleString('en-US', dateOptions);
-			var status = appointment.approved ? 'confirmed' : 'not confirmed';
-			var statusColor = appointment.approved ? 'text-success' : 'text-danger';
+			var status = appointment.confirmed ? 'confirmed' : 'not confirmed';
+			var statusColor = appointment.confirmed ? 'text-success' : 'text-danger';
 
 			// Service fields
 			eventModal.find('#service').html(appointment.service.name);
@@ -99,7 +99,7 @@ $(function () {
 		}).then(function (val) {
 			hideSpinner('#confirm_cancel', 'Yes');
 			const settings = {
-				method: 'DELETE',
+				method: 'POST',
 				headers: {
 					'Accept': 'application/json',
 					'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ $(function () {
 				})
 			}
 
-			new API().request('/appointment/', settings).then(response => {
+			new API().request('/appointment/cancel', settings).then(response => {
 				statusCode = response.status;
 				statusText = response.msg;
 

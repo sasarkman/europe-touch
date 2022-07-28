@@ -10,8 +10,8 @@ $(function () {
 
 	// Add phone validator
 	$.validator.addMethod('phone_number', function() {
-        return iti.isValidNumber();
-    });
+		return iti.isValidNumber();
+	});
 
 	var validator = $('#main-form').validate({
 		rules: {
@@ -20,6 +20,10 @@ $(function () {
 				required: true
 			},
 			password: {
+				required: true
+			},
+			password2: {
+				equalTo: '#password',
 				required: true
 			},
 			name: {
@@ -37,6 +41,7 @@ $(function () {
 		messages: {
 			email: 'Please enter an e-mail address',
 			password: 'Please enter a password',
+			password2: 'Please enter a matching password',
 			name: 'Please enter your full name',
 			phone: 'Please enter a phone number',
 			age: 'Please enter your age'
@@ -70,7 +75,6 @@ $(function () {
 		var email = $('#email').val();
 		var password = $('#password').val();
 		var name = $('#name').val();
-		// var phone = $('#phone').val();
 		var phone = iti.getNumber();
 		var age = $('#age').val();
 

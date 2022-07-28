@@ -25,8 +25,8 @@ function hideSpinner(element, text) {
 	$(element).prop('disabled', false);
 }
 
-function alertShow(text, css) {
-	var alert = $('#alert');
+function alertShow(text, css, id='#alert') {
+	var alert = $(id);
 
 	// set classes
 	alert.attr('class', `alert ${css}`);
@@ -35,8 +35,8 @@ function alertShow(text, css) {
 	alert.html(text);
 }
 
-function alertReset() {
-	var alert = $('#alert');
+function alertReset(id='#alert') {
+	var alert = $(id);
 
 	// set classes
 	alert.attr('class', 'alert d-none');

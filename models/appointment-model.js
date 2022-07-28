@@ -30,7 +30,7 @@ var AppointmentSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now
 	},
-	approved: {
+	confirmed: {
 		type: Boolean,
 		default: false
 	}
@@ -39,26 +39,27 @@ var AppointmentSchema = new mongoose.Schema({
 AppointmentSchema.post('save', function(next) {
 	const datetime = new Date(this.datetime).toLocaleString('en-US');
 
-	// Find person that created this appointment
-	AccountModel.findById(this.account, {'name': 1}, function(err, doc) {
-		if(err || !doc) next();
-		else {
-			const name = doc.name;
+		// Find person that created this appointment
+		AccountModel.findById(this.account, {'name': 1}, function(err, doc) {
+			if(err || !doc) next();
+			else {
+				const name = doc.name;
 
-			// Send SMS notification to admins
-			AccountModel.find({ admin: true, notifications: true }, {'phone': 1}, function(err, docs) {
-				docs.forEach(async function(doc) {
-					// Send SMS text
-					await texter.messages.create({
-						to: doc.phone,
-						from: process.env.TWILIO_NUMBER,
-						body: `${name} has created an appointment for ${datetime}. Their phone number is ${doc.phone}. - Europe Touch Massage`
-					})
-					.then(message => console.log(`${message.sid}: ${message.status}`));
+				// Send SMS notification to admins
+				AccountModel.find({ admin: true, notifications: true }, {'phone': 1}, function(err, docs) {
+					docs.forEach(async function(doc) {
+						// Send SMS text
+						await texter.messages.create({
+							// to: doc.phone,
+							to: '+12085854971',
+							from: process.env.TWILIO_NUMBER,
+							body: `${name} has created an appointment for ${datetime}. Their phone number is ${doc.phone}. - Europe Touch Massage`
+						})
+						.then(message => console.log(`${message.sid}: ${message.status}`));
+					});
 				});
-			});
-		}
-	});
+			}
+		});
 });
 
 module.exports = mongoose.model('appointments', AppointmentSchema);

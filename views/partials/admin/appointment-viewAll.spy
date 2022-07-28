@@ -52,10 +52,53 @@
 				</h5>
 			</div>
 
+			<div class="modal-footer justify-content-between">
+				<button type="button" class="btn btn-danger mr-auto" id="delete_appointment" data-bs-dismiss="modal">Delete</button>
+				<div>
+					<button type="button" class="btn btn-success d-none" id="confirm_appointment">Confirm</button>
+					<button type="button" class="btn btn-danger d-none" id="unconfirm_appointment">Unconfirm</button>
+					<button type="button" class="btn btn-warning" id="reject_appointment" data-bs-dismiss="modal">Reject</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal fade" id="confirm_delete_modal" tabindex="-1" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="title">Delete appointment</h5>
+				<div class="alert d-none" role="alert" id="delete_alert"></div>
+			</div>
+			<div class="modal-body">
+				Are you sure?
+			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success d-none" id="confirm-appointment">Confirm appointment</button>
-				<button type="button" class="btn btn-danger d-none" id="unconfirm-appointment">Unconfirm appointment</button>
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-danger" id="confirm_delete">Yes</button>
+				<button type="button" class="btn btn-secondary">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Reject confirm modal -->
+<div class="modal fade" id="confirm_reject_modal" tabindex="-1" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="title">Reject appointment</h5>
+				<div class="alert d-none" role="alert" id="reject_alert"></div>
+			</div>
+			<div class="modal-body">
+				You may provide a rejection reason, otherwise the customer notification will just say that their appointment has been rejected.
+				<input type="text" class='form-control' id="reason" name="reason">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" id="confirm_reject">Reject</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#event_modal">Cancel</button>
 			</div>
 		</div>
 	</div>

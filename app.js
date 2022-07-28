@@ -50,11 +50,6 @@ const mongo_url = process.env.MONGODB_URL;
 const router = express.Router();
 app.use(router);
 
-// Load routes
-const accountRouter = require('./routes/account');
-const serviceRouter = require('./routes/service');
-const appointmentRouter = require('./routes/appointment');
-
 // Load logging module
 const logger = require('morgan');
 
@@ -190,10 +185,17 @@ app.use(logger(loggingSettings, {
 
 // TODO: create log that just logs system errors
 
+// Load routes
+const accountRouter = require('./routes/account');
+const serviceRouter = require('./routes/service');
+const appointmentRouter = require('./routes/appointment');
+const guestAppointmentRouter = require('./routes/guest-appointment');
+
 // Initialize routes
 app.use('/account', accountRouter);
 app.use('/service', serviceRouter);
 app.use('/appointment', appointmentRouter);
+app.use('/guest-appointment', guestAppointmentRouter);
 
 // Define and initialize templating engine
 app.engine('spy', sprightly);
@@ -225,6 +227,9 @@ app.use('/intl-tel-input.css', express.static(path.join(__dirname, 'node_modules
 
 app.use('/datetimepicker.js', express.static(path.join(__dirname, 'node_modules/jquery-datetimepicker/build/jquery.datetimepicker.full.min.js')));
 app.use('/datetimepicker.css', express.static(path.join(__dirname, 'node_modules/jquery-datetimepicker/build/jquery.datetimepicker.min.css')));
+
+// Set icon
+app.use('/favicon.ico', express.static('img/favicon.ico'));
 
 // Express IP and port info
 app.set('port', process.env.PORT);

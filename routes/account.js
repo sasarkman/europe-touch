@@ -70,6 +70,7 @@ router.route('/index').
 			if(isAdmin) {
 				HTML = `
 					<a href="/appointment/viewAll">View appointments</a>
+					<a href="/guest-appointment/schedule">Schedule appointment</a>
 					<a href="/service/manage">Manage services</a>
 					<a href="/service/create">Create service</a>
 					<a href="/account/edit">Account settings</a>

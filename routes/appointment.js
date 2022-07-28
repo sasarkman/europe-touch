@@ -70,7 +70,7 @@ router.route('/').
 					// Note: this gets consumed by fullcalendar in JSON object, not sure why
 					'id': '$_id',
 					'start': '$datetime',
-					'approved': '$approved',
+					'confirmed': '$confirmed',
 					'created': '$createdTimestamp',
 				// Account data
 					'account.email': 1,
@@ -110,13 +110,13 @@ router.route('/').
 
 			// Define the type of appointment to retrieve
 			switch(type) {
-				// Query approved appointments
+				// Query confirmed appointments
 				case 'confirmed':
-					query.approved = true;
+					query.confirmed = true;
 					break;
-				// Query unapproved appointments
+				// Query unconfirmed appointments
 				case 'unconfirmed':
-					query.approved = false;
+					query.confirmed = false;
 					break;
 				default:
 					break;
@@ -182,7 +182,6 @@ router.route('/').
 
 			// Get session info
 			var id = new mongoose.Types.ObjectId(req.session.user.id);
-			var email = req.session.user.email;
 
 			// Get body info
 			var service = new mongoose.Types.ObjectId(req.body.service);
@@ -226,45 +225,9 @@ router.route('/').
 			}
 
 			AppointmentModel.findOneAndDelete(query, function(err, result) {
-				if(err || !result) return res.status(400).json({ msg: 'Failed to cancel appointment.' })
+				if(err || !result) return res.status(400).json({ msg: 'Failed to delete appointment.' })
 				else {
-					// If cancelled appointment was approved, need to notify admin
-					if(result.approved) {
-						const accountID = result.account;
-
-						// Query database for account with this email
-						AccountModel.findOne({'_id': accountID}, function(err, account) {
-							if(err || !account) res.send(err);
-							else {
-								// Send email notification
-								const mailOptions = {
-									from: process.env.EMAIL_FROM,
-									to: process.env.EMAIL_ADDR,
-									subject: `Appointment cancelled: ${account.name}`,
-									text: `
-										${account.name} (${account.email}) has cancelled their appointment for ${result.datetime}
-									`
-								};
-							
-								emailer.sendMail(mailOptions, function (error, info) {
-									if (error) {
-										console.log(error);
-									} else {
-										console.log('Email sent: ' + info.response);
-									}
-								});
-
-								// Send SMS text
-								texter.messages.create({
-									to: process.env.TEMPNUM,
-									from: process.env.TWILIO_NUMBER,
-									body: `${account.name} has cancelled their appointment at ${result.datetime}. Their phone number is ${account.phone}. - Europe Touch Massage`
-								})
-								.then(message => console.log(message.sid));
-							}
-						});
-					}
-					return res.status(200).json({ msg: 'Cancelled appointment!', data: result })
+					return res.status(200).json({ msg: 'Deleted appointment!', data: result })
 				}
 			});
 		}
@@ -290,7 +253,7 @@ router.route('/confirm')
 			AppointmentModel.findOne(
 				{
 					_id: id,
-					'approved': false
+					'confirmed': false
 				},
 				function(err, appointment) {
 					if(err || !appointment) {
@@ -298,8 +261,8 @@ router.route('/confirm')
 					} else {
 						const account = appointment.account;
 
-						appointment.approved = true;
-						appointment.save(function(err, result) {
+						appointment.confirmed = true;
+						appointment.updateOne(function(err, result) {
 							if(err) {
 								return res.status(400).json({ msg: 'Failed to confirm appointment' })
 							} else {
@@ -309,17 +272,13 @@ router.route('/confirm')
 								AccountModel.findOne({ _id: account }, function(err, account) {
 									if(err || !account) console.log(err);
 									else {
+										const body = `Hi ${account.name},\nYour appointment at ${datetime} has been confirmed!\n- Europe Touch Massage`
+
 										const mailOptions = {
 											from: process.env.EMAIL_FROM,
 											to: account.email,
 											subject: 'Appointment confirmation',
-											text: `
-												Hello ${account.name},
-												Your appointment for ${datetime} has been confirmed!
-				
-												See you soon,
-												Edina
-											`
+											text: body
 										};
 									
 										// Send e-mail notification
@@ -336,7 +295,7 @@ router.route('/confirm')
 										.create({
 											to: account.phone,
 											from: process.env.TWILIO_NUMBER,
-											body: `Hi ${account.name}, your appointment at ${result.datetime} has been confirmed! - Europe Touch Massage`,
+											body: body
 										})
 										.then(message => console.log(message.sid));
 									}
@@ -368,10 +327,10 @@ router.route('/unconfirm')
 			AppointmentModel.updateOne(
 				{
 					_id: id,
-					'approved': true
+					'confirmed': true
 				},
 				{
-					'approved': false
+					'confirmed': false
 				},
 				function(err, result) {
 					if(err || !result || result.modifiedCount != 1) {
@@ -387,6 +346,139 @@ router.route('/unconfirm')
 	);
 
 router.route('/cancel')
+	.post(
+		[
+			auth.isLoggedIn,
+			body('id').custom(value => {
+				return ObjectId.isValid(value);
+			}),
+		], 
+		function(req, res) {
+			const errors = validationResult(req);
+			if(!errors.isEmpty()) {
+				return res.status(422).json({ msg: errors.array() });
+			}
+			var appointmentID = new mongoose.Types.ObjectId(req.body.id);
 
+			var query = {
+				_id: appointmentID,
+				account: req.session.user.id
+			};
+
+			AppointmentModel.findOneAndDelete(query, function(err, result) {
+				if(err || !result) return res.status(400).json({ msg: 'Failed to cancel appointment.' })
+				else {
+					// If cancelled appointment was confirmed, need to notify admin
+					if(result.confirmed) {
+						const accountID = result.account;
+
+						// Query database for account with this email
+						AccountModel.findOne({'_id': accountID}, function(err, account) {
+							if(err || !account) res.send(err);
+							else {
+								// Send notifications to admins
+								AccountModel.find({ admin: true, notifications: true }, {'phone': 1}, function(err, docs) {
+									var emails = [];
+									docs.forEach(async function(doc) {
+										emails.push(doc.email);
+
+										// Send SMS text
+										await texter.messages.create({
+											to: doc.phone,
+											from: process.env.TWILIO_NUMBER,
+											body: `${account.name} has cancelled their appointment at ${result.datetime}. Their phone number is ${account.phone}. - Europe Touch Massage`
+										})
+										.then(message => console.log(`${message.sid}: ${message.status}`));
+									});
+
+									// Define email notification
+									const mailOptions = {
+										from: process.env.EMAIL_FROM,
+										to: emails.join(','),
+										// bcc: emails.join(','),
+										subject: `Appointment cancelled: ${account.name}`,
+										text: `
+											${account.name} (${account.email}) has cancelled their appointment for ${result.datetime}
+										`
+									};
+								
+									// Send email notification
+									emailer.sendMail(mailOptions, function (error, info) {
+										if (error) {
+											console.log(error);
+										} else {
+											console.log('Email sent: ' + info.response);
+										}
+									});
+								});
+							}
+						});
+					}
+					return res.status(200).json({ msg: 'Cancelled appointment!', data: result })
+				}
+			});
+		}
+	)
+;
+
+router.route('/reject')
+	.post(
+		[
+			auth.isLoggedIn,
+			body('id').custom(value => {
+				return ObjectId.isValid(value);
+			}),
+		], 
+		function(req, res) {
+			const errors = validationResult(req);
+			if(!errors.isEmpty()) {
+				return res.status(422).json({ msg: errors.array() });
+			}
+			var appointmentID = new mongoose.Types.ObjectId(req.body.id);
+			
+			// Rejection reason (optional)
+			var reason = req.body.reason;
+
+			var query = {
+				_id: appointmentID,
+			};
+
+			AppointmentModel.findOneAndDelete(query, function(err, result) {
+				if(err || !result) return res.status(400).json({ msg: 'Failed to reject appointment.' })
+				else {
+					const datetime = new Date(result.datetime).toLocaleString('en-US');
+					const rejectionReason = (reason) ? ` Rejection reason: ${reason}.` : '';
+					const body = `Hello ${result.name}, your appointment at Europe Touch Massage for ${datetime} has been rejected.${rejectionReason}`;
+
+					texter.messages.create({
+						to: result.phone,
+						from: process.env.TWILIO_NUMBER,
+						body: body
+					})
+					.then(message => console.log(`${message.sid}: ${message.status}`));
+
+					// Define email notification
+					const mailOptions = {
+						from: process.env.EMAIL_FROM,
+						to: result.email,
+						subject: `Appointment rejected: ${result.name}`,
+						text: body
+					};
+				
+					// Send email notification
+					emailer.sendMail(mailOptions, function (error, info) {
+						if (error) {
+							console.log(error);
+						} else {
+							console.log('Email sent: ' + info.response);
+						}
+					});
+
+					return res.status(200).json({ msg: 'Rejected appointment!', data: result })
+				}
+			});
+		}
+	)
+;
 
 module.exports = router;

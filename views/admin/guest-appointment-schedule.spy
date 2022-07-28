@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+	<script type="text/javascript" src="/jquery.js"></script>
+	<script type="text/javascript" src="/jquery-validation.js"></script>
+	<script type="text/javascript" src="/bootstrap.js"></script>
+	<script type="text/javascript" src="/datetimepicker.js"></script>
+	<script type="text/javascript" src="/intl-tel-input.js"></script>
+
+	<script type="text/javascript" src="/scripts/api.js"></script>
+	<script type="text/javascript" src="/scripts/utilities.js"></script>
+
+	<script type="text/javascript" src="/controllers/admin/guest-appointment-schedule.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="/datetimepicker.css">
+	<link rel="stylesheet" type="text/css" href="/intl-tel-input.css">
+	
+	<style>
+		.xdsoft_datetimepicker {
+			width:100%
+		}
+		.xdsoft_datepicker.active {
+			width: 80%
+		}
+		.xdsoft_datetimepicker .xdsoft_datepicker.active+.xdsoft_timepicker {
+			width: 17%
+		}
+		.xdsoft_datetimepicker .xdsoft_label {
+			z-index: 1
+		}
+		/* Fix for popover appearing ontop of iti dropdown */
+		.iti__country-list {
+			z-index: 3
+		}
+		.iti {
+			width: 100%
+		}
+	</style>
+	
+	<head>
+		<title>Create Appointment</title>
+	</head>
+	<body class='d-flex flex-column min-vh-100'>
+		<< partials/header >>
+		<div class='mt-auto d-flex flex-column justify-content-center align-items-center'>
+			<h1>Schedule appointment for customer</h1>
+			<div class="alert d-none" role="alert" id="alert"></div>
+			<form method="post" id="main-form" style="width:580px">
+				<div class='form-group mb-1'>
+					<label for="service">Type of service:</label>
+					<select class='form-control' name="service" id="services">
+					</select>
+				</div>
+
+				<div class='collapse'>
+					<!-- Service section -->
+					<div class='form-group mb-1'>
+						<label for="duration">Duration:</label>
+						<div class='form-control' name="duration" id="duration" readonly></div>
+					</div>
+
+					<div class='form-group mb-1'>
+						<label for="price">Price:</label>
+						<div class="input-group">
+							<div class="input-group-prepend">
+								<span class="input-group-text">$</span>
+							</div>
+							<input class='form-control' name="price" id="price" readonly>
+						</div>
+					</div>
+
+					<div class='form-group mb-1'>
+						<label for="description">Description:</label>
+						<textarea class='form-control' name="description" id="description" readonly></div></textarea>
+					</div>
+				</div>
+
+				<!-- Customer section -->
+				<div class='form-group mb-1'>
+					<label for="name">Customer name:</label>
+					<input type="name" class='form-control' placeholder="Enter the customer's name" id="name" name="name">
+				</div>
+
+				<div class='form-group mb-1'>
+					<label for="email">Customer e-mail address:</label>
+					<input type="email" class='form-control' placeholder="Enter the customer's e-mail address" id="email" name="email">
+				</div>
+
+				<div class='form-group mb-1'>
+					<label for="phone">Customer phone number:</label><br>
+					<input type="tel" class='form-control' aria-describedby="phone_help" id="phone" name="phone">
+				</div>
+	
+				<div class='form-group mb-1'>
+					<label for="age">Customer age:</label>
+					<div class="input-group">
+						<input type="text" class="form-control" placeholder="Enter the customer's age" id="age" name="age">
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary" type='button' data-bs-toggle="popover" data-bs-trigger="focus" title="Why do we ask for age?" data-bs-content="The customer's age lets us know what services we can and can't perform">?</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Date section -->
+				<div class='form-group mb-1'>
+					<label for="date">Date:</label><br>
+					<input type="text" class='form-control' name="datetime" id="datetime">
+				</div>
+
+				<button type="button" class="btn btn-primary" id="schedule_button">Schedule</button>
+			</form>
+		</div>
+
+		<< partials/footer >>
+	</body>
+</html>
